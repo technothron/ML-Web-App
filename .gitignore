@@ -1,0 +1,13 @@
+# Temporary files
+*.tmp
+*.log
+
+# Build output
+/dist
+/build
+
+# Editor-specific caches
+.vscode/
+.stylelintrc.json
+
+.gitignore
