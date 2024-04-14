@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 from torchvision.models import resnet50
 from PIL import Image
 from advertorch.attacks import (
+    FGSM,
     GradientAttack,
     GradientSignAttack,
     FastFeatureAttack,
@@ -42,6 +43,10 @@ def load_image(image):
         transforms.ToTensor(),
     ])
     return preprocess(image).unsqueeze(0)
+
+@adversarial_attacks_bp.route('/FGSM', methods=['POST'])
+def FGSM():
+    return attack(FGSM)
 
 @adversarial_attacks_bp.route('/gradient_attack', methods=['POST'])
 def gradient_attack():
@@ -144,8 +149,22 @@ def attack(Attack):
         image.requires_grad = True
         # not using epsilon
         # default epsilon is used in libary
-        adversary = Attack(model)
-        adv_image = adversary.perturb(image)
+        # library has more parameter 
+        # hum baad me add kar sakte h need ke according
+        if Attack==FGSM:
+            adversary = Attack(model,eps=epsilon)
+            adv_image = adversary.perturb(image)            
+        if Attack==CarliniWagnerL2Attack or Attack==ElasticNetL1Attack or Attack==LBFGSAttack or Attack==SpatialTransformAttack or Attack==JacobianSaliencyMapAttack:
+            adversary = Attack(model,num_classes=1000)
+            adv_image = adversary.perturb(image)
+        elif Attack==FastFeatureAttack:
+            adversary = Attack(model)
+            adv_image = adversary.perturb(image,image)  
+        else:
+            adversary = Attack(model)
+            adv_image = adversary.perturb(image)
+        # adversary = Attack(model)
+        # adv_image = adversary.perturb(image)
 
         adv_image_pil = transforms.ToPILImage()(adv_image.squeeze(0).cpu())
         buffered = BytesIO()
