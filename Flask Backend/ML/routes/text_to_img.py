@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, Response
 import torch
 from diffusers import StableDiffusionPipeline
 
@@ -13,10 +13,10 @@ def generate_image():
     prompt = data.get('prompt')
 
     if not prompt:
-        return jsonify({'error': 'Prompt is required.'}), 400
+        return 'Prompt is required.', 400
 
     image = pipe(prompt).images[0]
 
     image_bytes = image.cpu().numpy().tobytes()
 
-    return jsonify({'image': image_bytes})
+    return image_bytes, 200, {'Content-Type': 'application/octet-stream'}
