@@ -7,7 +7,7 @@ text_to_image = Blueprint('text_to_image', __name__)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16).to(device)
 
-@text_to_image.route('/generate_image', methods=['POST'])
+@text_to_image.route('/generate_image_via_text', methods=['POST'])
 def generate_image():
     prompt = request.data.decode('utf-8')
 
