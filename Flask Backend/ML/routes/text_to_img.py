@@ -9,8 +9,7 @@ pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5",
 
 @text_to_image.route('/generate_image', methods=['POST'])
 def generate_image():
-    data = request.json
-    prompt = data.get('prompt')
+    prompt = request.data.decode('utf-8')
 
     if not prompt:
         return 'Prompt is required.', 400

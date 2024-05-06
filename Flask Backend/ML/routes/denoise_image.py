@@ -1,15 +1,13 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 import cv2
 import numpy as np
-import requests
 from PIL import Image
 from io import BytesIO
 
 denoise_image_bp = Blueprint('denoise_image', __name__)
 
-def download_image(url):
-    response = requests.get(url)
-    image = Image.open(BytesIO(response.content))
+def preprocess_image(image_data):
+    image = Image.open(BytesIO(image_data))
     return np.array(image)
 
 def add_gaussian_noise(image, mean=0, sigma=25):
@@ -27,36 +25,27 @@ def denoise_image(image):
 
 @denoise_image_bp.route('/denoise_image', methods=['POST'])
 def denoise_image():
-    data = request.json
-    url = data.get('url')
+    image_data = request.files['image'].read()
 
-    if not url:
-        return jsonify({'error': 'URL is required.'}), 400
+    if not image_data:
+        return 'Image data is required.', 400
 
-    response = requests.get(url)
-    if response.status_code != 200:
-        return jsonify({'error': 'Failed to fetch image.'}), 400
-
-    original_image = download_image(url)
+    original_image = preprocess_image(image_data)
     
     noisy_image = add_gaussian_noise(original_image)
 
     denoised_image = denoise_image(noisy_image)
 
     original_bytes = BytesIO()
-    Image.fromarray(original_image).save(original_bytes, format='PNG')
-    original_base64 = original_bytes.getvalue()
+    Image.fromarray(original_image).save(original_bytes, format='JPEG')
+    original_bytes.seek(0)
 
     noisy_bytes = BytesIO()
-    Image.fromarray(noisy_image).save(noisy_bytes, format='PNG')
-    noisy_base64 = noisy_bytes.getvalue()
+    Image.fromarray(noisy_image).save(noisy_bytes, format='JPEG')
+    noisy_bytes.seek(0)
 
     denoised_bytes = BytesIO()
-    Image.fromarray(denoised_image).save(denoised_bytes, format='PNG')
-    denoised_base64 = denoised_bytes.getvalue()
+    Image.fromarray(denoised_image).save(denoised_bytes, format='JPEG')
+    denoised_bytes.seek(0)
 
-    return jsonify({
-        'original_image': original_base64.decode('latin1'),
-        'noisy_image': noisy_base64.decode('latin1'),
-        'denoised_image': denoised_base64.decode('latin1')
-    })
+    return original_bytes, noisy_bytes, denoised_bytes
