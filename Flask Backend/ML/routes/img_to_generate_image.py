@@ -8,10 +8,12 @@ from diffusers import StableDiffusionImg2ImgPipeline
 img_to_generate_image_bp = Blueprint('img_to_generate_image', __name__)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusion", torch_dtype=torch.float16).to(
+# pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusion", torch_dtype=torch.float16).to(
+#     device
+# )
+pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusion").to(
     device
 )
-
 @img_to_generate_image_bp.route('/generate_image', methods=['POST'])
 def generate_image():
     data = request.data
