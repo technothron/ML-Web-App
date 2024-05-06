@@ -32,12 +32,21 @@ from advertorch.attacks import (
 
 adversarial_attacks_bp = Blueprint('adversarial_attacks', __name__)
 
-def fetch_image_from_url(image_url):
-    response = requests.get(image_url)
-    image = Image.open(BytesIO(response.content)).convert('RGB')
-    return image
 
-def load_image(image):
+# this is for url 
+# def fetch_image_from_url(image_url):
+#     response = requests.get(image_url)
+#     image = Image.open(BytesIO(response.content)).convert('RGB')
+#     return image
+
+# def load_image(image):
+#     preprocess = transforms.Compose([
+#         transforms.Resize((224, 224)),
+#         transforms.ToTensor(),
+#     ])
+#     return preprocess(image).unsqueeze(0)
+def load_image(image_data):
+    image = Image.open(BytesIO(image_data)).convert('RGB')
     preprocess = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -133,19 +142,19 @@ def jacobian_saliency_map_attack():
     return attack(JacobianSaliencyMapAttack)
 
 def attack(Attack):
-    data = request.json
-    image_url = data.get('image_url')
-    epsilon = data.get('epsilon', 0.03)
+    data = request.data
+    image_data = data
+    epsilon = 0.03
 
-    if not image_url:
-        return jsonify({'error': 'Image URL is required.'}), 400
+    if not image_data:
+        return {'error': ' image_data is required.'}, 400
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = resnet50(pretrained=True).to(device).eval()
 
     try:
-        image = fetch_image_from_url(image_url)
-        image = load_image(image).to(device)
+        # image = fetch_image_from_url(image_url)
+        image = load_image(image_data).to(device)
         image.requires_grad = True
         # not using epsilon
         # default epsilon is used in libary
@@ -169,7 +178,9 @@ def attack(Attack):
         adv_image_pil = transforms.ToPILImage()(adv_image.squeeze(0).cpu())
         buffered = BytesIO()
         adv_image_pil.save(buffered, format="JPEG")
-        img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
-        return jsonify({'adversarial_image': img_str})
+        # img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        # return jsonify({'adversarial_image': img_str})
+        return buffered.getvalue()
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return {'error': str(e)}, 500
