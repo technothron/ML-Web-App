@@ -5,7 +5,8 @@ from diffusers import StableDiffusionPipeline
 text_to_image = Blueprint('text_to_image', __name__)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16).to(device)
+# pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16).to(device)
+pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5").to(device)
 
 @text_to_image.route('/generate_image_via_text', methods=['POST'])
 def generate_image():
@@ -16,6 +17,6 @@ def generate_image():
 
     image = pipe(prompt).images[0]
 
-    image_bytes = image.cpu().numpy().tobytes()
+    image_bytes = image.tobytes()
 
     return image_bytes, 200, {'Content-Type': 'application/octet-stream'}
