@@ -63,8 +63,32 @@ export default function AdversarialAttackPage() {
       return;
     }
     const url = "http://localhost:5000/api/";
-    let routeName = prompt.toLowerCase().replace(/([A-Z])/g, "_$1");
-    url += routeName;
+    if (prompt == "FGSM") url += "FGSM";
+    if (prompt == "GradientAttack") url += "gradient_attack";
+    if (prompt == "GradientSignAttack") url += "gradient_sign_attack";
+    if (prompt == "FastFeatureAttack") url += "fast_feature_attack";
+    if (prompt == "L2BasicIterativeAttack") url += "l2_basic_iterative_attack";
+    if (prompt == "LinfBasicIterativeAttack")
+      url += "linf_basic_iterative_attack";
+    if (prompt == "PGDAttack") url += "pgd_attack";
+    if (prompt == "LinfPGDAttack") url += "linf_pgd_attack";
+    if (prompt == "L2PGDAttack") url += "l2_pgd_attack";
+    if (prompt == "L1PGDAttack") url += "l1_pgd_attack";
+    if (prompt == "SparseL1DescentAttack") url += "sparse_l1_descent_attack";
+    if (prompt == "MomentumIterativeAttack") url += "momentum_iterative_attack";
+    if (prompt == "LinfMomentumIterativeAttack")
+      url += "linf_momentum_iterative_attack";
+    if (prompt == "L2MomentumIterativeAttack")
+      url += "l2_momentum_iterative_attack";
+    if (prompt == "CarliniWagnerL2Attack") url += "carlini_wagner_l2_attack";
+    if (prompt == "DDNL2Attack") url += "ddn_l2_attack";
+    if (prompt == "LBFGSAttack") url += "lbfgs_attack";
+    if (prompt == "SinglePixelAttack") url += "single_pixel_attack";
+    if (prompt == "ElasticNetL1Attack") url += "elastic_net_l1_attack";
+    if (prompt == "LocalSearchAttack") url += "local_search_attack";
+    if (prompt == "SpatialTransformAttack") url += "spatial_transform_attack";
+    if (prompt == "JacobianSaliencyMapAttack")
+      url += "jacobian_saliency_map_attack";
     const data = { prompt: prompt };
     try {
       const response = await fetch(url, {
