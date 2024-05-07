@@ -8,7 +8,7 @@ import {
   Select,
   MenuItem,
   FormControl,
-  FormControlLabel,
+  Typography,
 } from "@mui/material";
 import { useState, useRef } from "react";
 export default function AdversarialAttackPage() {
@@ -39,7 +39,6 @@ export default function AdversarialAttackPage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [responseImage, setResponseImage] = useState(null);
   const [attack, setAttack] = useState("");
-  const [prompt, setPrompt] = useState("");
   const inputFileRef = useRef(null);
   const handleImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
@@ -58,45 +57,43 @@ export default function AdversarialAttackPage() {
   };
 
   async function handleSubmit() {
-    if (!selectedImage || !prompt) {
-      alert("Please select an image and enter a prompt"); // User-friendly alert
+    if (!selectedImage || !attack) {
+      alert("Please select an image and enter a attack"); // User-friendly alert
       return;
     }
-    const url = "http://localhost:5000/api/";
-    if (prompt == "FGSM") url += "FGSM";
-    if (prompt == "GradientAttack") url += "gradient_attack";
-    if (prompt == "GradientSignAttack") url += "gradient_sign_attack";
-    if (prompt == "FastFeatureAttack") url += "fast_feature_attack";
-    if (prompt == "L2BasicIterativeAttack") url += "l2_basic_iterative_attack";
-    if (prompt == "LinfBasicIterativeAttack")
+    let url = "http://127.0.0.1:5000/api/";
+    if (attack == "FGSM") url += "FGSM";
+    if (attack == "GradientAttack") url += "gradient_attack";
+    if (attack == "GradientSignAttack") url += "gradient_sign_attack";
+    if (attack == "FastFeatureAttack") url += "fast_feature_attack";
+    if (attack == "L2BasicIterativeAttack") url += "l2_basic_iterative_attack";
+    if (attack == "LinfBasicIterativeAttack")
       url += "linf_basic_iterative_attack";
-    if (prompt == "PGDAttack") url += "pgd_attack";
-    if (prompt == "LinfPGDAttack") url += "linf_pgd_attack";
-    if (prompt == "L2PGDAttack") url += "l2_pgd_attack";
-    if (prompt == "L1PGDAttack") url += "l1_pgd_attack";
-    if (prompt == "SparseL1DescentAttack") url += "sparse_l1_descent_attack";
-    if (prompt == "MomentumIterativeAttack") url += "momentum_iterative_attack";
-    if (prompt == "LinfMomentumIterativeAttack")
+    if (attack == "PGDAttack") url += "pgd_attack";
+    if (attack == "LinfPGDAttack") url += "linf_pgd_attack";
+    if (attack == "L2PGDAttack") url += "l2_pgd_attack";
+    if (attack == "L1PGDAttack") url += "l1_pgd_attack";
+    if (attack == "SparseL1DescentAttack") url += "sparse_l1_descent_attack";
+    if (attack == "MomentumIterativeAttack") url += "momentum_iterative_attack";
+    if (attack == "LinfMomentumIterativeAttack")
       url += "linf_momentum_iterative_attack";
-    if (prompt == "L2MomentumIterativeAttack")
+    if (attack == "L2MomentumIterativeAttack")
       url += "l2_momentum_iterative_attack";
-    if (prompt == "CarliniWagnerL2Attack") url += "carlini_wagner_l2_attack";
-    if (prompt == "DDNL2Attack") url += "ddn_l2_attack";
-    if (prompt == "LBFGSAttack") url += "lbfgs_attack";
-    if (prompt == "SinglePixelAttack") url += "single_pixel_attack";
-    if (prompt == "ElasticNetL1Attack") url += "elastic_net_l1_attack";
-    if (prompt == "LocalSearchAttack") url += "local_search_attack";
-    if (prompt == "SpatialTransformAttack") url += "spatial_transform_attack";
-    if (prompt == "JacobianSaliencyMapAttack")
+    if (attack == "CarliniWagnerL2Attack") url += "carlini_wagner_l2_attack";
+    if (attack == "DDNL2Attack") url += "ddn_l2_attack";
+    if (attack == "LBFGSAttack") url += "lbfgs_attack";
+    if (attack == "SinglePixelAttack") url += "single_pixel_attack";
+    if (attack == "ElasticNetL1Attack") url += "elastic_net_l1_attack";
+    if (attack == "LocalSearchAttack") url += "local_search_attack";
+    if (attack == "SpatialTransformAttack") url += "spatial_transform_attack";
+    if (attack == "JacobianSaliencyMapAttack")
       url += "jacobian_saliency_map_attack";
-    const data = { prompt: prompt };
+    const formData = new FormData();
+    formData.append("data", selectedImage);
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=UTF-8", // Specify data is a plain text prompt
-        },
-        body: data.prompt,
+        body: formData,
       });
 
       if (!response.ok) {
@@ -131,14 +128,6 @@ export default function AdversarialAttackPage() {
             }}
           >
             <Grid display={"inline"}>
-              <TextField
-                required
-                id="prompt"
-                label="Image Prompt"
-                sx={{ mx: "1em" }}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-              />
               <Button
                 variant="contained"
                 sx={{ my: "1em" }}
@@ -202,20 +191,33 @@ export default function AdversarialAttackPage() {
         </Box>
       )}
       {responseImage && (
-        <Box
-          sx={{
-            m: "1em",
-            display: "flex",
-            justifyContent: "center",
-            flexWrap: "row",
-          }}
-        >
-          <img
-            src={responseImage}
-            alt="Response"
-            style={{ maxHeight: "200px" }}
-          />
-        </Box>
+        <>
+          <Box
+            sx={{
+              m: "1em",
+              display: "flex",
+              justifyContent: "center",
+              flexWrap: "row",
+            }}
+          >
+            <Typography variant="h2">{`Image Attacked with ${attack}`}</Typography>
+          </Box>
+
+          <Box
+            sx={{
+              m: "1em",
+              display: "flex",
+              justifyContent: "center",
+              flexWrap: "row",
+            }}
+          >
+            <img
+              src={responseImage}
+              alt="Response"
+              style={{ maxHeight: "200px" }}
+            />
+          </Box>
+        </>
       )}
     </>
   );

@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
-import requests
+from flask import Blueprint, request
 from io import BytesIO
+import base64
 import torch
+import csrf
 import torchvision.transforms as transforms
 from torchvision.models import resnet50
 from PIL import Image
@@ -31,22 +32,10 @@ from advertorch.attacks import (
 )
 
 adversarial_attacks_bp = Blueprint('adversarial_attacks', __name__)
-
-
-# this is for url 
-# def fetch_image_from_url(image_url):
-#     response = requests.get(image_url)
-#     image = Image.open(BytesIO(response.content)).convert('RGB')
-#     return image
-
-# def load_image(image):
-#     preprocess = transforms.Compose([
-#         transforms.Resize((224, 224)),
-#         transforms.ToTensor(),
-#     ])
-#     return preprocess(image).unsqueeze(0)
 def load_image(image_data):
-    image = Image.open(BytesIO(image_data)).convert('RGB')
+    parts = image_data.split(',', 1)
+    image_data = parts[1]
+    image = Image.open(BytesIO(base64.b64decode(image_data))).convert('RGB')
     preprocess = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -142,7 +131,7 @@ def jacobian_saliency_map_attack():
     return attack(JacobianSaliencyMapAttack)
 
 def attack(Attack):
-    data = request.data
+    data = request.form["data"]
     image_data = data
     epsilon = 0.03
 
@@ -153,13 +142,8 @@ def attack(Attack):
     model = resnet50(pretrained=True).to(device).eval()
 
     try:
-        # image = fetch_image_from_url(image_url)
         image = load_image(image_data).to(device)
         image.requires_grad = True
-        # not using epsilon
-        # default epsilon is used in libary
-        # library has more parameter 
-        # hum baad me add kar sakte h need ke according
         if Attack==FGSM:
             adversary = Attack(model,eps=epsilon)
             adv_image = adversary.perturb(image)            
@@ -172,14 +156,10 @@ def attack(Attack):
         else:
             adversary = Attack(model)
             adv_image = adversary.perturb(image)
-        # adversary = Attack(model)
-        # adv_image = adversary.perturb(image)
 
         adv_image_pil = transforms.ToPILImage()(adv_image.squeeze(0).cpu())
         buffered = BytesIO()
         adv_image_pil.save(buffered, format="JPEG")
-        # img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
-        # return jsonify({'adversarial_image': img_str})
         return buffered.getvalue()
 
     except Exception as e:
