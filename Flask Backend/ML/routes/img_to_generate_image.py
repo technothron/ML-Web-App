@@ -1,6 +1,6 @@
 from flask import Blueprint, request, Response
 import torch
-import requests
+import base64
 from PIL import Image
 from io import BytesIO
 from diffusers import StableDiffusionImg2ImgPipeline
@@ -16,14 +16,14 @@ pipe = StableDiffusionImg2ImgPipeline.from_pretrained("nitrosocke/Ghibli-Diffusi
 )
 @img_to_generate_image_bp.route('/generate_image', methods=['POST'])
 def generate_image():
-    data = request.data
-    prompt = request.args.get('prompt')
+    data = request.form["image"]
+    prompt = request.form["prompt"]
 
     if not data or not prompt:
         return 'URL and prompt both are required.', 400
 
     try:
-        init_image = Image.open(BytesIO(data)).convert("RGB")
+        init_image = Image.open(BytesIO(base64.b64decode(data))).convert("RGB")
         init_image.thumbnail((768, 768))
 
         generator = torch.Generator(device=device).manual_seed(1024)
