@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 export default function Image2ImagePage() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [responseImage, setResponseImage] = useState(null);
+  const [prompt, setPrompt] = useState("");
   const inputFileRef = useRef(null);
   const handleImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
@@ -11,7 +12,7 @@ export default function Image2ImagePage() {
       const reader = new FileReader();
 
       reader.onload = (e) => {
-        setSelectedImage(e.target.result); // Update state with image preview
+        setSelectedImage(e.target.result);
       };
 
       reader.readAsDataURL(file);
@@ -22,16 +23,41 @@ export default function Image2ImagePage() {
   };
 
   async function handleSubmit() {
-    const response = await fetch("https://dummyimage.com/300", {
-      method: "GET",
-      responseType: "blob",
-    });
-    const result = await response.blob();
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setResponseImage(e.target.result);
-    };
-    reader.readAsDataURL(result);
+    if (!selectedImage || !prompt) {
+      alert("Please select an image and enter a prompt"); // User-friendly alert
+      return;
+    }
+
+    const url = "http://localhost:5000/api/generate_image";
+
+    const formData = new FormData();
+    formData.append("prompt", prompt);
+    formData.append("image", selectedImage);
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Request failed with status: ${response.status}. Error: ${errorText}`
+        );
+      }
+
+      const imageBlob = await response.blob();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setResponseImage(e.target.result);
+      };
+      reader.readAsDataURL(imageBlob);
+      return;
+    } catch (error) {
+      console.error("Error sending request:", error);
+      alert("Error generating image. Please see the console for more info."); // Display error to user
+    }
   }
 
   return (
@@ -51,6 +77,8 @@ export default function Image2ImagePage() {
               id="prompt"
               label="Image Prompt"
               sx={{ mx: "1em" }}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
             />
             <Button
               variant="contained"
